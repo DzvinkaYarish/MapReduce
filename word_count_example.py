@@ -11,7 +11,6 @@ class WordCountMapper(map_reduce.Mapper):
         for line in element:
             values = line.split()
             results.extend([(value, 1) for value in values if value.isalpha()])
-            print(values)
         return results
 
     def combine(self,  mapper_results):
@@ -25,9 +24,9 @@ class WordCountReducer(map_reduce.Reducer):
 
     def reduce(self, key, value):
         if key in self.map:
-            self.map[key] += value
+            self.map[key] += int(value)
         else:
-            self.map[key] = value
+            self.map[key] = int(value)
 
 
 if __name__ == "__main__":

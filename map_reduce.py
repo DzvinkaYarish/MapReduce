@@ -33,7 +33,7 @@ class Mapper(multiprocessing.Process):
             if not os.path.exists('{}reducer_{}/'.format(DIRS['mapper'], rdr_i)):
                 os.makedirs('{}reducer_{}/'.format(DIRS['mapper'], rdr_i))
             file_for_ith_reducer = open('{}reducer_{}/mapper_{}.txt'.format(DIRS['mapper'], rdr_i, self.index), 'w+')
-            [file_for_ith_reducer.write(key + '\t' + str(value) + '\n') for (key, value) in mapper_results] #if rdr_i == self.__find_reducer(key)]
+            [file_for_ith_reducer.write(key + '\t' + str(value) + '\n') for (key, value) in mapper_results if rdr_i == self.__find_reducer(key)]
             file_for_ith_reducer.close()
 
     def run(self):
@@ -41,6 +41,7 @@ class Mapper(multiprocessing.Process):
             if filename.split('.')[0].endswith(str(self.index)):
                 with open(DIRS['input'] + filename, 'r') as file:
                     mapper_results = self.map(file.readlines())
+                    print(mapper_results)
                     # if self.combine:
                        # mapper_results = self.combine(mapper_results)
                     self.shuffle(mapper_results)
