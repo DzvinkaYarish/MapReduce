@@ -14,8 +14,8 @@ class WordCountMapper(map_reduce.Mapper):
         return results
 
     def combine(self,  mapper_results):
-        return [(sum(i[1] for i in group), key) for key, group in
-            itertools.groupby(sorted(mapper_results, key=lambda i: i[0]), lambda i: i[1])]
+        return [(key, sum(i[1] for i in group)) for key, group in
+            itertools.groupby(sorted(mapper_results, key=lambda i: i[1]), lambda i: i[0])]
 
 
 class WordCountReducer(map_reduce.Reducer):

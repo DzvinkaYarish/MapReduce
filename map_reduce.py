@@ -9,9 +9,7 @@ with open('configurations.txt') as file:
     NUM_MAPPERS = int(file.readline().split('=')[1].strip())
     NUM_REDUCERS = int(file.readline().split('=')[1].strip())
     DATA_DIR = file.readline().split('=')[1].strip()
-    # COMBINE = bool(file.readline().split('=')[1].strip())
-    COMBINE = False
-    print(COMBINE)
+    COMBINE = bool(file.readline().split('=')[1].strip())
 
 
 class Mapper(multiprocessing.Process):
@@ -41,9 +39,9 @@ class Mapper(multiprocessing.Process):
             if filename.split('.')[0].endswith(str(self.index)):
                 with open(DIRS['input'] + filename, 'r') as file:
                     mapper_results = self.map(file.readlines())
-                    print(mapper_results)
-                    # if self.combine:
-                       # mapper_results = self.combine(mapper_results)
+
+                    if COMBINE:
+                       mapper_results = self.combine(mapper_results)
                     self.shuffle(mapper_results)
                 break
 
@@ -62,7 +60,7 @@ class Reducer(multiprocessing.Process):
             with open('{}reducer_{}/'.format(DIRS['mapper'], self.index) + filename, 'r') as file:
                 for line in file.readlines():
                     self.reduce(line.split('\t')[0], line.split('\t')[1])
-        with open('{}output_{}.txt'.format(DIRS['reducer'], self.index), 'w') as file:
+        with open('{}output_{}.txt'.format(DIRS['reducer'], self.index), 'w+') as file:
             for (key, value) in self.map.items():
                 file.write(key + '\t' + str(value) + '\n')
 
