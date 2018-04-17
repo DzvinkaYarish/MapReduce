@@ -8,7 +8,6 @@ class WordCountMapper(map_reduce.Mapper):
 
     def map(self, element):
         results = []
-        print(element)
         for line in element:
             values = line.split()
             results.extend([(value, 1) for value in values if value.isalpha()])
@@ -16,7 +15,7 @@ class WordCountMapper(map_reduce.Mapper):
         return results
 
     def combine(self,  mapper_results):
-        return [(sum(i[0] for i in group), key) for key, group in
+        return [(sum(i[1] for i in group), key) for key, group in
             itertools.groupby(sorted(mapper_results, key=lambda i: i[0]), lambda i: i[1])]
 
 
@@ -33,7 +32,9 @@ class WordCountReducer(map_reduce.Reducer):
 
 if __name__ == "__main__":
     word_count_job = map_reduce.Job()
-    word_count_job.run()
+    word_count_job.run(WordCountMapper, WordCountReducer)
+
+
 
 
 

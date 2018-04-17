@@ -9,7 +9,9 @@ with open('configurations.txt') as file:
     NUM_MAPPERS = int(file.readline().split('=')[1].strip())
     NUM_REDUCERS = int(file.readline().split('=')[1].strip())
     DATA_DIR = file.readline().split('=')[1].strip()
-    COMBINE = bool(file.readline().split('=')[1].strip())
+    # COMBINE = bool(file.readline().split('=')[1].strip())
+    COMBINE = False
+    print(COMBINE)
 
 
 class Mapper(multiprocessing.Process):
@@ -21,7 +23,7 @@ class Mapper(multiprocessing.Process):
         return hash(key) % NUM_REDUCERS
 
     def map(self, element):
-        print('sdfgh')
+        pass
 
     def combine(self, mapper_results):
         pass
@@ -29,10 +31,9 @@ class Mapper(multiprocessing.Process):
     def shuffle(self, mapper_results):
         for rdr_i in range(NUM_REDUCERS):
             if not os.path.exists('{}reducer_{}/'.format(DIRS['mapper'], rdr_i)):
-                print('ghj')
                 os.makedirs('{}reducer_{}/'.format(DIRS['mapper'], rdr_i))
             file_for_ith_reducer = open('{}reducer_{}/mapper_{}.txt'.format(DIRS['mapper'], rdr_i, self.index), 'w+')
-            [file_for_ith_reducer.write(key + '\t' + value + '\n') for (key, value) in mapper_results] #if rdr_i == self.__find_reducer(key)]
+            [file_for_ith_reducer.write(key + '\t' + str(value) + '\n') for (key, value) in mapper_results] #if rdr_i == self.__find_reducer(key)]
             file_for_ith_reducer.close()
 
     def run(self):
@@ -40,8 +41,8 @@ class Mapper(multiprocessing.Process):
             if filename.split('.')[0].endswith(str(self.index)):
                 with open(DIRS['input'] + filename, 'r') as file:
                     mapper_results = self.map(file.readlines())
-                    if self.combine:
-                        mapper_results = self.combine(mapper_results)
+                    # if self.combine:
+                       # mapper_results = self.combine(mapper_results)
                     self.shuffle(mapper_results)
                 break
 
@@ -61,13 +62,13 @@ class Reducer(multiprocessing.Process):
                 for line in file.readlines():
                     self.reduce(line.split('\t')[0], line.split('\t')[1])
         with open('{}output_{}.txt'.format(DIRS['reducer'], self.index), 'w') as file:
-            for (key, value) in self.map:
-                file.write(key + '\t' + value + '\n')
+            for (key, value) in self.map.items():
+                file.write(key + '\t' + str(value) + '\n')
 
 
 class Job:
 
-    def run(self):
+    def run(self, mapper_name, reducer_name):
         for dir in DIRS:
             if not os.path.exists(DIRS[dir]):
                 os.makedirs(DIRS[dir])
@@ -77,13 +78,13 @@ class Job:
         rdc_workers = []
 
         for map_indx in range(NUM_MAPPERS):
-            m = Mapper(map_indx)
+            m = mapper_name(map_indx)
             map_workers.append(m)
             m.start()
         [t.join() for t in map_workers]
         # run the reduce step
         for rdc_indx in range(NUM_REDUCERS):
-            r = Reducer(rdc_indx)
+            r = reducer_name(rdc_indx)
             rdc_workers.append(r)
             r.start()
         [t.join() for t in rdc_workers]
